@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: tour_booking_postgres
+    environment:
+      POSTGRES_DB: tour_booking_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tour_booking_network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: tour_booking_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    networks:
+      - tour_booking_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: tour_booking_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - tour_booking_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  tour_booking_network:
+    driver: bridge

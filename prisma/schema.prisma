@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum TourStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  comments Comment[]
+
+  @@map("users")
+}
+
+model Tour {
+  id              String     @id @default(cuid())
+  destination     String
+  description     String?
+  detail          String
+  price           Decimal
+  duration        Int // in days
+  maxCapacity     Int
+  currentCapacity Int        @default(0)
+  status          TourStatus @default(DRAFT)
+  imageUrl        String[]
+  startDate       DateTime?
+  endDate         DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Relations
+  messages Message[]
+  comments Comment[]
+
+  @@map("tours")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  senderId   String
+  receiverId String?
+  tourId     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  sender   User  @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User? @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  tour     Tour? @relation(fields: [tourId], references: [id])
+
+  @@map("messages")
+  @@index([id])
+  @@index([senderId])
+
+}
+
+model Comment {
+  id     String @id @default(cuid())
+
+  userId String
+  User User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tourId String
+  Tour Tour @relation(fields: [tourId], references: [id], onDelete: Cascade)
+
+  content String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([id])
+  @@index([userId])
+}
