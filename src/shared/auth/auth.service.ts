@@ -47,9 +47,9 @@ export class AuthService {
     });
 
     return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      expires_in: 15 * 60, // 15 minutes in seconds
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      expiresIn: 15 * 60, // 15 minutes in seconds
     };
   }
 

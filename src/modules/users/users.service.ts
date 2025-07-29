@@ -1,10 +1,12 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, Logger } from '@nestjs/common';
 import { DatabaseService } from '../../shared/database/database.service';
 import { AuthService } from '../../shared/auth/auth.service';
 import { CreateUserDto, LoginDto, UserRole } from '../../shared/types';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private prisma: DatabaseService,
     private authService: AuthService,
@@ -16,6 +18,7 @@ export class UsersService {
     });
 
     if (existingUser) {
+      this.logger.error('User with this email already exists');
       throw new ConflictException('User with this email already exists');
     }
 
@@ -25,13 +28,13 @@ export class UsersService {
       data: {
         email: createUserDto.email,
         password: hashedPassword,
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
+        name: createUserDto.name,
         role: createUserDto.role || UserRole.USER,
       },
     });
 
     const { password, ...userWithoutPassword } = user;
+    this.logger.log(`User created successfully: ${userWithoutPassword.email}`);
     return userWithoutPassword;
   }
 
@@ -41,6 +44,7 @@ export class UsersService {
     });
 
     if (!user) {
+      this.logger.error('User not found');
       throw new NotFoundException('User not found');
     }
 
@@ -50,6 +54,7 @@ export class UsersService {
     );
 
     if (!isPasswordValid) {
+      this.logger.error('Invalid credentials');
       throw new NotFoundException('Invalid credentials');
     }
 
@@ -60,6 +65,7 @@ export class UsersService {
     });
 
     const { password, ...userWithoutPassword } = user;
+    this.logger.log(`User logged in successfully: ${userWithoutPassword.email}`);
     return {
       user: userWithoutPassword,
       ...tokens,
@@ -71,14 +77,14 @@ export class UsersService {
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         role: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
       },
     });
+    this.logger.log(`Found ${users.length} users`);
     return users;
   }
 
@@ -88,8 +94,7 @@ export class UsersService {
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         role: true,
         isActive: true,
         createdAt: true,
@@ -98,9 +103,11 @@ export class UsersService {
     });
 
     if (!user) {
+      this.logger.error(`User not found: ${id}`);
       throw new NotFoundException('User not found');
     }
 
+    this.logger.log(`User found: ${user.email}`);
     return user;
   }
 
@@ -110,6 +117,7 @@ export class UsersService {
     });
 
     if (!existingUser) {
+      this.logger.error(`User not found: ${id}`);
       throw new NotFoundException('User not found');
     }
 
@@ -124,8 +132,7 @@ export class UsersService {
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         role: true,
         isActive: true,
         createdAt: true,
@@ -133,6 +140,7 @@ export class UsersService {
       },
     });
 
+    this.logger.log(`User updated successfully: ${user.email}`);
     return user;
   }
 
@@ -142,6 +150,7 @@ export class UsersService {
     });
 
     if (!existingUser) {
+      this.logger.error(`User not found: ${id}`);
       throw new NotFoundException('User not found');
     }
 
@@ -149,6 +158,7 @@ export class UsersService {
       where: { id },
     });
 
+    this.logger.log(`User deleted successfully: ${id}`);
     return { message: 'User deleted successfully' };
   }
 } 

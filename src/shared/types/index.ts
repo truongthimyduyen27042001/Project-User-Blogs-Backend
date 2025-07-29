@@ -18,8 +18,7 @@ export interface JwtPayload {
 export interface CreateUserDto {
   email: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
+  name?: string;
   role?: UserRole;
 }
 
@@ -66,9 +65,9 @@ export interface TokenData {
 }
 
 export interface TokenResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
 
 export interface RefreshTokenDto {
